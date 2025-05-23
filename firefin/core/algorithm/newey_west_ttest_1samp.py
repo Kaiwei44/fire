@@ -15,7 +15,7 @@ class NeweyWestTTest:
     A class for performing a one-sample t-test using Newey-West adjusted standard errors.
     """
 
-   @staticmethod
+    @staticmethod
     def newey_west_test(factor: pd.DataFrame, return_adj: pd.DataFrame):
 
         if isinstance(factor, pd.Series):
@@ -45,9 +45,9 @@ class NeweyWestTTest:
 
     @staticmethod
     def newey_west_ttest_1samp(data: Union[np.ndarray, pd.Series, list],
-                               popmean: float = 0.0,
-                               lags: int = 4,
-                               nan_policy: str = 'omit') -> Tuple[float, float, float]:
+                            popmean: float = 0.0,
+                            lags: int = 4,
+                            nan_policy: str = 'omit') -> Tuple[float, float, float]:
 
         """
                 Perform a one-sample t-test using Newey-West adjusted standard errors.

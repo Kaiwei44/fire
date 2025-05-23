@@ -133,3 +133,12 @@ class TestRegression(TestCase):
         res = RollingRegressor(x, y, fit_intercept=False).fit(window=5, n_jobs=1)
         print(res.alpha)
         print(res.beta)
+
+    # 测试多元线性回归
+    def test_multi_linear_regression(self):
+        x = list(gen_df(10,3) for _ in range(3))
+        y = gen_df((10,3))
+
+        res = RollingRegressor(x, y, fit_intercept=False).fit(window=5, n_jobs=1)
+        print(f"alpha: {res.alpha}")
+        print(f"beta: {res.beta}")

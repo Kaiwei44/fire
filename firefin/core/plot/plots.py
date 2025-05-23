@@ -12,7 +12,7 @@ from matplotlib.gridspec import GridSpec
 from numba import njit
 from scipy import stats
 
-from ...evaluation.eva_utils import PeriodType, IC, QuantileReturns
+from ...core.eva_utils import PeriodType, IC, QuantileReturns
 
 __all__ = [
     "plt_ic",
