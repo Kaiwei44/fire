@@ -1,7 +1,7 @@
 import typing
 import pandas as pd
 from ..eva_utils import compute_ic, ForwardReturns, QuantileReturns
-from ...core.algorithm.regression import least_square, rolling_regression, BatchRegressionResult
+from ...core.algorithm.regression import least_square, RollingRegressor, BatchRegressionResult
 from ...common.config import logger
 from .anomaly_test import AnomalyTest
 from .fama_macbeth import FamaMacBeth
@@ -141,7 +141,16 @@ class AcaEvaluatorModel:
         """
         if rolling:
             # Use rolling_regression function
-            result = rolling_regression(x=self.factor, y=self.return_adj, window=window, fit_intercept=fit_intercept, n_jobs=self.n_jobs, verbose=self.verbose)
+            result = RollingRegressor(
+                x = self.factor, 
+                y = self.return_adj,  
+                fit_intercept = fit_intercept
+                ).fit(
+                    window = window,
+                    n_jobs = self.n_jobs, 
+                    verbose = self.verbose
+                )
+            
         else:
             # Time-by-time regression using least_square
             from collections import defaultdict
