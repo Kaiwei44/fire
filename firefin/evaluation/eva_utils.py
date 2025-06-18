@@ -46,6 +46,9 @@ def compute_forward_returns(price: pd.DataFrame, periods: list[PeriodType]) -> F
           where each value is the forward return from time t to t + period for each asset.
 
     '''
+    if np.any(price.values <= 0):
+        raise ValueError('Price is adjusted price, which must be greater than 0.')
+    
     forward_returns_dict = {}
 
     returns: pd.DataFrame = np.log(price).shift(-1) - np.log(price)
