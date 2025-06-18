@@ -25,6 +25,30 @@ QuantileReturns = typing.NewType("QuantileReturns", dict[PeriodType, pd.DataFram
 
 
 def compute_forward_returns(price: pd.DataFrame, periods: list[PeriodType]) -> ForwardReturns:
+    '''
+    Compute forward returns over specified holding periods.
+
+    Parameters
+    ----------
+    price : pd.DataFrame
+        Asset adjusted price time series with shape (Time × Stock).
+        Each column represents the adjusted price of an asset indexed by date.
+        
+    periods : list[PeriodType]
+        List of forward periods to compute returns for.
+
+    Returns
+    -------
+    ForwardReturns
+        A wrapper around a dictionary of DataFrames:
+        - Keys are the holding periods.
+        - Values are DataFrames of forward returns with same shape as price (Time × Stock),
+          where each value is the forward return from time t to t + period for each asset.
+
+    '''
+    if np.any(price.values <= 0):
+        raise ValueError('Price is adjusted price, which must be greater than 0.')
+    
     forward_returns_dict = {}
 
     returns: pd.DataFrame = np.log(price).shift(-1) - np.log(price)

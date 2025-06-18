@@ -1,7 +1,7 @@
 import typing
 import pandas as pd
 from ..eva_utils import compute_ic, ForwardReturns, QuantileReturns
-from ...core.algorithm.regression import least_square, rolling_regression, BatchRegressionResult
+from ...core.algorithm.regression import least_square, RollingRegressor, BatchRegressionResult
 from ...common.config import logger
 from .anomaly_test import AnomalyTest
 from .fama_macbeth import FamaMacBeth
@@ -141,23 +141,33 @@ class AcaEvaluatorModel:
         """
         if rolling:
             # Use rolling_regression function
-            result = rolling_regression(x=self.factor, y=self.return_adj, window=window, fit_intercept=fit_intercept, n_jobs=self.n_jobs, verbose=self.verbose)
+            result = RollingRegressor(
+                x = self.factor, 
+                y = self.return_adj,  
+                fit_intercept = fit_intercept
+                ).fit(
+                    window = window,
+                    n_jobs = self.n_jobs, 
+                    verbose = self.verbose
+                )
+            
         else:
             # Time-by-time regression using least_square
-            from collections import defaultdict
-            results = defaultdict(list)
+            fields = ['alpha', 'beta', 'r2', 'r2_adj', 'residuals']
+            results = {key: [] for key in fields}
             for t in self.factor.index:
                 x_t = self.factor.loc[t]
                 y_t = self.return_adj.loc[t]
                 if x_t.isnull().any() or y_t.isnull().any():
                     continue
-                reg_result = least_square(x=x_t, y=y_t, fit_intercept=fit_intercept)
-                results['alpha'].append(reg_result.alpha)
-                results['beta'].append(reg_result.beta)
-                results['r2'].append(reg_result.r2)
-                results['r2_adj'].append(reg_result.r2_adj)
-                results['residuals'].append(reg_result.residuals)
-            result = BatchRegressionResult(alpha=results['alpha'], beta=results['beta'], r2=results['r2'], r2_adj=results['r2_adj'], residuals=results['residuals'])
+                reg_result = least_square(
+                    x = x_t, 
+                    y = y_t, 
+                    fit_intercept = fit_intercept
+                )
+                for key in fields:
+                    results[key].append(getattr(reg_result, key))
+            result = BatchRegressionResult(**results)
         return result
         
     def run_anomaly_test(self,
