@@ -30,19 +30,19 @@ statements, and other relevant information. This section outlines the available 
 
 |字段|中文名|
 |---|---|
-|open|开盘价——日级|
-|close|收盘价——日级|
-|high|最高价——日级|
-|low|最低价——日级|
+|open|后复权开盘价——日级|
+|close|后复权收盘价——日级|
+|high|后复权最高价——日级|
+|low|后复权最低价——日级|
 |volume|成交量(股/份)——日级|
 |money|成交额(元)——日级|
 |return_adj|涨跌幅——日级|
 |vwap|成交量加权均价——日级|
 |adj_factor|复权因子|
-|open_dr|开盘价——日级|
-|high_dr|最高价——日级|
-|low_dr|最低价——日级|
-|close_dr|收盘价——日级|
+|open_dr|原始开盘价——日级|
+|high_dr|原始最高价——日级|
+|low_dr|原始最低价——日级|
+|close_dr|原始收盘价——日级|
 |volume_dr|成交量(股/份)——日级|
 |vwap_dr|成交量加权均价——日级|
 |FinanceValue|融资余额(元)|
