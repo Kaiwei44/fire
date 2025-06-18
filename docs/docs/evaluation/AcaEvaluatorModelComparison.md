@@ -1,3 +1,10 @@
+---
+title: AcaEvaluatorModelComparison
+parent: Evaluate Factor
+permalink: /evaluate/aca_evaluator_model_comparison/
+nav_order: 6.3
+---
+
 # AcaEvaluatorModelComparison
 
 `AcaEvaluatorModelComparison` is a class designed for evaluating **multi-factor models**, supporting methods such as double portfolio sorting and maximum Sharpe ratio (MSR) comparison between two models.
