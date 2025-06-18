@@ -54,3 +54,8 @@ The data is organized in a structured format to facilitate easy access and manip
 
 With the above structure, you can easily perform time-series analysis, portfolio optimization, and other financial analyses, with out thinking about the data alignment issue.
 
+## Current Data Structure Limitations
+
+1. Inclusion of Delisted Securities: The dataset retains entries for delisted securities, though their corresponding fields are populated with zeroes. While this poses limited disruption due to the low incidence of delistings in the A-share market, it may introduce unnecessary complexity for users unaware of this convention.
+2. Unstructured Security Sequencing: The "Securities" column does not follow a predetermined order (e.g., listing date or ticker sequence). This lack of inherent sorting logic necessitates external reference to the ListingData index for proper chronological organization.
+3. Ambiguous Naming Conventions: The dataset’s frame naming relies on user-defined labels, which can lead to confusion when shared across teams or workflows. Standardized naming protocols would enhance interpretability and maintain consistency with industry conventions.

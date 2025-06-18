@@ -1,7 +1,7 @@
 ---
 title: Errata
 permalink: /errata/
-nav_order: 2
+nav_order: 100
 ---
 # Errata for *Navigating the Factor Zoo: The Science of Quantitative Investing*
 ---

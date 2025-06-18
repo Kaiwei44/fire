@@ -1,3 +1,10 @@
+---
+title: AcaEvaluator
+permalink: /evaluate/aca_evaluator/
+parent: Evaluate Factor
+nav_order: 6.1
+---
+
 # AcaEvaluator
 
 `AcaEvaluator` is a modular Python class designed to evaluate asset pricing factors using a comprehensive suite of financial econometrics tools. It supports portfolio sorts, cross-sectional and time-series regressions, model comparison tests, and robustness diagnostics.

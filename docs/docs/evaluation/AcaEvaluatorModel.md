@@ -1,3 +1,11 @@
+---
+title: AcaEvaluatorModel
+parent: Evaluate Factor
+permalink: /evaluate/aca_evaluator_model/
+nav_order: 6.2
+---
+
+
 # AcaEvaluatorModel
 
 `AcaEvaluatorModel` is a class designed for evaluating the performance of a **single-factor model** using various asset pricing methodologies. It supports portfolio sorting, cross-sectional regression, information coefficient calculations, and anomaly tests.
