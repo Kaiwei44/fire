@@ -65,13 +65,44 @@ def compute_forward_returns(price: pd.DataFrame, periods: list[PeriodType]) -> F
 
 
 def _compute_ic_df_df(
-    a: pd.DataFrame, b: pd.DataFrame, method: typing.Literal["pearson", "kendall", "spearman"]
+    a: pd.DataFrame, 
+    b: pd.DataFrame, 
+    method: typing.Literal["pearson", "kendall", "spearman"]
 ) -> pd.Series:
-    return a.corrwith(b, axis=1, method=method)
+    '''
+     Compute the row-wise correlation (Information Coefficient, IC) between two DataFrames.
+
+    Each row is treated as a cross-sectional slice (e.g., a specific date),
+    and the correlation is calculated between the corresponding rows of `a` and `b`.
+
+    Note:
+    -----
+    `a` and `b` should have the same index (e.g., dates) and columns (e.g., assets).
+    If they differ, the correlation will be computed based on the intersection 
+    of their indices and columns for each row.
+
+    Parameters
+    ----------
+    a : pd.DataFrame
+        First DataFrame with rows representing dates and columns representing assets.
+    b : pd.DataFrame
+        Second DataFrame with rows representing dates and columns representing assets.
+    method : {"pearson", "kendall", "spearman"}
+        Correlation method to use. "pearson" is the default
+
+    Returns
+    -------
+    pd.Series
+        A Series of correlation values (IC), indexed by the row labels (typically dates).
+    '''
+
+    return a.corrwith(b, axis = 1, method = method)
 
 
 def compute_ic(
-    factor: pd.DataFrame, forward_returns: ForwardReturns, method: typing.Literal["pearson", "kendall", "spearman"]
+    factor: pd.DataFrame, 
+    forward_returns: ForwardReturns, 
+    method: typing.Literal["pearson", "kendall", "spearman"]
 ) -> IC:
     """
     Compute IC (Information Coefficient) for the factor and forward returns, which is the correlation between the
