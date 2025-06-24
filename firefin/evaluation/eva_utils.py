@@ -131,6 +131,95 @@ def compute_ic(
         )
     )
 
+def summarise_ic(ic_data: IC) -> pd.DataFrame:
+    '''
+    Generate a summary table of key statistics for the Information Coefficient (IC) time series.
+
+    This function computes descriptive metrics for each holding period (i.e., each column in `ic_data`), 
+    including the mean, standard deviation, Information Ratio (IR), and the proportion of IC values 
+    exceeding common significance thresholds.
+
+    Metrics included:
+    - mean: Average IC
+    - std: Standard deviation of IC
+    - ir: Information Ratio (mean / std)
+    - > 0: Proportion of IC values greater than 0
+    - < 0: Proportion of IC values less than 0
+    - > 3% / < -3%: Proportion of IC values greater than 3% or less than -3%
+    - > 5% / < -5%: Proportion of IC values greater than 5% or less than -5%
+
+    Parameters
+    ----------
+    ic_data : IC
+        A DataFrame where each column represents IC values for a specific holding period 
+        and each row corresponds to a time point (e.g., daily IC).
+
+    Returns
+    -------
+    pd.DataFrame
+        A summary table with statistics for each holding period.
+    '''
+
+    summary_table = pd.DataFrame(
+        np.nan,
+        index = ["mean", "std", "ir", "> 0", "< 0", "> 3%", "< -3%", "> 5%", "< -5%"],
+        columns = ic_data.columns,
+    )
+
+    ic_mean = ic_data.mean()
+    ic_std = ic_data.std()
+    ir = ic_mean / ic_std
+
+    summary_table.loc["mean"] = ic_mean.values
+    summary_table.loc["std"] = ic_std.values
+    summary_table.loc["ir"] = ir.values
+    summary_table.loc["mean"] = ic_mean.values
+    summary_table.loc["std"] = ic_std.values
+    summary_table.loc["ir"] = ir.values
+    summary_table.loc["> 0"] = ((ic_data > 0).sum() / np.isfinite(ic_data).sum()).values
+    summary_table.loc["< 0"] = ((ic_data < 0).sum() / np.isfinite(ic_data).sum()).values
+    summary_table.loc["> 3%"] = ((ic_data > 0.03).sum() / np.isfinite(ic_data).sum()).values
+    summary_table.loc["< -3%"] = ((ic_data < -0.03).sum() / np.isfinite(ic_data).sum()).values
+    summary_table.loc["> 5%"] = ((ic_data > 0.05).sum() / np.isfinite(ic_data).sum()).values
+    summary_table.loc["< -5%"] = ((ic_data < -0.05).sum() / np.isfinite(ic_data).sum()).values
+
+    return summary_table
+
+def generate_latex_code(plot_path: str, summary_table: pd.DataFrame) -> str:
+    '''
+    Generate complete LaTeX codes as a string, embedding a plot image and a summary table.
+    
+    Parameters
+    ----------
+    plot_path : str
+        The file path to the image to include in the LaTeX codes.
+    summary_table : pd.DataFrame
+        A pandas DataFrame containing the summary statistics that will be rendered as a LaTeX table.
+
+    Returns
+    -------
+    str
+        Full LaTeX codes as a single string, ready to be written to a .tex file.
+    
+    '''
+    latex_code = [
+    r'\documentclass[a4paper]{article}',
+    r'\usepackage[margin=2cm]{geometry}',
+    r'\usepackage{graphicx}',
+    r'\usepackage{booktabs}',
+    r'\usepackage{float}',
+    r'\begin{document}',
+    '',
+    r'\section*{Factor Analysis Result}',
+    r'\subsection*{IC Plot}',
+    f'\includegraphics[width=1\\textwidth]{{{plot_path}}}',
+    r'\subsection*{IC Summary Table}',
+    f"{summary_table.to_latex(float_format = '%.4f', escape = True)}",
+    r'\end{document}'
+    ]
+    latex_code = '\n'.join(latex_code).replace('_', '\_')
+
+    return latex_code
 
 def factor_to_quantile(factor: pd.DataFrame, quantiles: int = 5) -> pd.DataFrame:
     """
