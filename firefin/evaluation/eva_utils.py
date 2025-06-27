@@ -169,7 +169,7 @@ def factor_to_quantile(factor: pd.DataFrame, quantiles: int = 5) -> pd.DataFrame
         else:
             return row
 
-    return factor.apply(_row_to_quantile)
+    return factor.apply(_row_to_quantile, axis=1)
 
 def factor_to_quantile_dependent_double_sort(primary_factor: pd.DataFrame, secondary_factor: pd.DataFrame, quantiles: typing.Tuple[int, int]):
     """

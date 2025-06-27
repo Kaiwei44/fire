@@ -70,4 +70,4 @@ Currently, we have two types of data structure:
 
 which is enough for most of the cases. But for transaction data or order by order data, we have no choice but to use `pd.DataFrame` to store the data, but index have to be (Time × Stock) and columns should be the variable name. 
 
-If the data is periodic in time, but may not be float/int/bool, 
+If the data is periodic in time, but may not be float/int/bool, maybe we should design a new data structure like n-dimensional array to store the data.
