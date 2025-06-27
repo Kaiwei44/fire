@@ -1,11 +1,13 @@
 import typing
 import pandas as pd
-from ..eva_utils import compute_ic, ForwardReturns, QuantileReturns
+from ..eva_utils import compute_ic, summarise_ic, generate_latex_code, ForwardReturns, QuantileReturns
 from ...core.algorithm.regression import least_square, RollingRegressor, BatchRegressionResult
 from ...common.config import logger
 from .anomaly_test import AnomalyTest
 from .fama_macbeth import FamaMacBeth
 from .portfolio_sort import PortfolioSort
+from ...core.plot import plots
+from pathlib import Path
 
 class AcaEvaluatorModel:
     def __init__(self,
@@ -106,20 +108,50 @@ class AcaEvaluatorModel:
             return results, stats
         return results
         
-    def run_ic(self, method: str = "pearson") -> pd.DataFrame:
+    def run_ic(
+            self, 
+            method: str = "pearson",
+            plot: bool = True,
+            plot_dir: str = None,
+            latex: bool = True,
+            latex_dir: str = None
+    ) -> pd.DataFrame:
         """
-        Compute the Information Coefficient (IC) between the factor and future returns.
+        Compute the Information Coefficient (IC) between the factor and forward returns.
+        Optionally generates a plot of IC and outputs a LaTeX report.
 
-        Parameters:
-            method: str
-                Correlation method to use; options are: 'pearson', 'spearman', 'kendall'
-    
-        Returns:
-            pd.DataFrame
-                IC values for each period
+        Parameters
+        ----------
+        method : str, optional (default='pearson')
+            The correlation method to use: 'pearson', 'spearman', or 'kendall'.
+
+        plot : bool, optional (default=True)
+            Whether to generate and save a plot of the IC series.
+
+        plot_dir : str or None, optional
+            Directory to save the plot image. Only relevant if plot = True.
+
+        latex : bool, optional (default=True)
+            Whether to generate and save LaTeX codes summarizing the IC results.
+
+        latex_dir : str or None, optional
+            Path to save the generated LaTeX `.tex` file. Only used if latex=True.
+
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame containing IC values for each evaluation period.
         """
+        
+        ic = compute_ic(self.factor, self.forward_returns, method = method)
+        if plot:
+            plots.plt_ic(ic, plot_dir = plot_dir)
+        if latex:
+            summary_table = summarise_ic(ic)
+            latex_code = generate_latex_code(Path(plot_dir) / 'Factor IC plot.png', summary_table)
+            Path(latex_dir).write_text(latex_code)
 
-        return compute_ic(self.factor, self.forward_returns, method=method)
+        return ic
 
     def run_regression(self, rolling: bool = False, window: int = 60, fit_intercept: bool = True) -> BatchRegressionResult | dict:
         """
