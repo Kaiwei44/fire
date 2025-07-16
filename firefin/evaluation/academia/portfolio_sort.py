@@ -25,10 +25,10 @@ class PortfolioSort:
     def single_sort(
         factor: pd.DataFrame,
         forward_returns: ForwardReturns,
-        market_cap: pd.DataFrame,
         quantiles: int,
         value_weighted: bool = True,
         get_quantile_sorts: bool = False,
+        market_cap: pd.DataFrame | None = None,
     ) -> typing.Union[QuantileReturns, pd.DataFrame]:
         """
         Perform single portfolio sort based on characteristic and create long-short portfolio.
@@ -80,11 +80,11 @@ class PortfolioSort:
         factor1: pd.DataFrame,
         factor2: pd.DataFrame,
         forward_returns: ForwardReturns,
-        market_cap: pd.DataFrame,
         quantiles: typing.Tuple[int, int] = (5, 5),
         dependent: bool = False,
         value_weighted: bool = True,
         get_quantile_sorts: bool = False,
+        market_cap: pd.DataFrame | None = None,
     ) -> typing.Union[QuantileReturns, pd.DataFrame]:
         """
         Sort securities based on two characteristics.

@@ -41,14 +41,12 @@ class TestRegression(TestCase):
         np.testing.assert_array_almost_equal(
             array(
                 [
-                    [
-                        [nan, nan],
-                        [nan, nan],
-                        [nan, nan],
-                        [nan, nan],
-                        [0.5, 0.5],
-                        [0.5, 0.5],
-                    ]
+                    [nan, nan],
+                    [nan, nan],
+                    [nan, nan],
+                    [nan, nan],
+                    [0.5, 0.5],
+                    [0.5, 0.5],
                 ]
             ),
             res.beta,
@@ -121,5 +119,6 @@ class TestRegression(TestCase):
         y.iloc[1] = x.iloc[1] * 4 + 1
         w = x.copy()
 
-        res0 = table_regression(x, y, w, axis=0)
-        pd.testing.assert_frame_equal(res0.alpha + res0.beta * x, y)
+        # 此时w不影响结果
+        res0 = table_regression(x, y, w, axis=1)
+        pd.testing.assert_frame_equal(x.mul(res0.beta, axis=0).add(res0.alpha, axis=0), y)

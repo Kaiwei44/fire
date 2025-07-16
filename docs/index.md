@@ -79,4 +79,9 @@ mng = firefin.Evaluator(factor, fr)
 mng.get_ic("pearson")
 mng.get_quantile_returns(5)
 
+# compute academia evaluation
+from firefin.evaluation.academia.AcaEvaluatorModel import AcaEvaluatorModel
+
+mng = AcaEvaluatorModel(factor=factor, forward_returns=fr, return_adj=data["return_adj"], n_jobs=24, verbose=10)
+mng.run_all()
 ```

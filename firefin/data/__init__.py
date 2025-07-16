@@ -5,3 +5,4 @@
 interface for fetching data
 
 """
+from .gateway import fetch_data

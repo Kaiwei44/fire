@@ -3,21 +3,60 @@ data_paths:
   windows: '%USERPROFILE%\.fire\data\raw\'
 
 data_maps:
+  # quote：量价数据
   open: file::feather
+  close: file::feather
   high: file::feather
   low: file::feather
-  close: file::feather
   volume: file::feather
   money: file::feather
-  vwap: file::feather
   return_adj: file::feather
+  vwap: file::feather
   adj_factor: file::feather
-  turnover_ratio: file::feather
+  open_dr: file::feather
+  high_dr: file::feather
+  low_dr: file::feather
+  close_dr: file::feather
+  volume_dr: file::feather
+  vwap_dr: file::feather
+  FinanceValue: file::feather
+  FinanceBuyValue: file::feather
+  FinanceRefundValue: file::feather
+  SecurityVolume: file::feather
+  SecuritySellVolume: file::feather
+  SecurityRefundVolume: file::feather
+  SecurityValue: file::feather
+  TradingValue: file::feather
+  FinaInTotalRatio: file::feather
+  SecuInTotalRatio: file::feather
+  shares_holding: file::feather
+  hold_ratio: file::feather
+  adjusted_hold_ratio: file::feather
+  # valuation：估值数据
+  circulating_market_cap: file::feather
+  pcf_ratio: file::feather
+  market_cap: file::feather
+  pe_ratio_lyr: file::feather
+  circulating_cap: file::feather
+  capitalization: file::feather
   pb_ratio: file::feather
   pe_ratio: file::feather
   ps_ratio: file::feather
-  pcf_ratio: file::feather
-  market_cap: file::feather
-  circulating_market_cap: file::feather
-  capitalization: file::feather
-  circulating_cap: file::feather
+  turnover_ratio: file::feather
+  circulating_market_cap_ashare: file::feather
+  market_cap_ashare: file::feather
+  circulating_cap_ashare: file::feather
+  capitalization_ashare: file::feather
+  # financial：财务
+  inventories: file::feather
+  total_current_assets: file::feather
+  fixed_assets: file::feather
+  good_will: file::feather
+  total_assets: file::feather
+  total_liability: file::feather
+  operating_revenue: file::feather
+  operating_profit: file::feather
+  total_profit: file::feather
+  net_profit: file::feather
+  basic_eps: file::feather
+

@@ -5,3 +5,4 @@
 factor evaluation
 
 """
+from .evaluator import Evaluator

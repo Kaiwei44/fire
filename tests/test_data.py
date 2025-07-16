@@ -5,7 +5,7 @@ from firefin.data.gateway import fetch_data, DATA_MAPS
 
 print(DATA_MAPS)
 
-data = fetch_data(["open", "test_no_data", "cn_bond_2y"])
+data = fetch_data(["open", "TradingValue","test_no_data"])
 
 print(data["open"])
 print(data["test_no_data"])

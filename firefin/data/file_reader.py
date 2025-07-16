@@ -7,6 +7,8 @@ from ..common.config import DATA_PATH
 
 data_path = os.path.join(os.path.dirname(__file__), 'raw')
 
+# TODO: support other file types
+# TODO: support start and end date, only read the data in the range
 def read_feather(names):
     try:
         result = {n : pd.read_feather(f"{DATA_PATH}/{n}.feather") for n in names}

@@ -11,6 +11,7 @@ import typing
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
+from joblib import Parallel, delayed
 
 __all__ = ["least_square", "RollingRegressor", "rolling_regression", "table_regression"]
 
@@ -136,7 +137,12 @@ class BatchRegressionResult:
 
 
 def _regression(
-    x: pd.DataFrame | pd.Series, y: pd.Series, w: pd.Series = None, fit_intercept: bool = True
+    x: pd.DataFrame | pd.Series,
+    y: pd.Series,
+    w: pd.Series = None,
+    fit_intercept: bool = True,
+    cov_type: str | None = None,
+    cov_kwds: dict | None = None,
 ) -> sm.regression.linear_model.RegressionResults:
     """
     Perform a linear regression using either OLS or WLS.
@@ -151,19 +157,39 @@ def _regression(
         The weights for WLS, default is None.
     fit_intercept: bool, optional
         Whether to fit an intercept term, default is True.
+    cov_type: str | None, optional
+        The covariance estimator, default is None.
+        - If None: use the default homoskedastic standard errors.
+        - If "HAC": Newey–West heteroskedasticity-and-autocorrelation robust SE.
+        - Other options supported by statsmodels (e.g. "HC0", "HC1", …).
+    cov_kwds: dict | None, optional
+        The keyword arguments for the covariance estimator, default is None.
+        For Newey–West, you’d typically pass `{"maxlags": L}` to control lag length.
 
     Returns
     -------
     sm.regression.linear_model.RegressionResults
         The regression results.
     """
+    
+    ## if x contains nan, fill nan with 0
+    ## TODO: fill nan with 0 is not a good idea, we should use the mean of the column to fill nan
+    x = np.nan_to_num(x, nan=0)
+    y = np.nan_to_num(y, nan=0)
+
     if fit_intercept:
         x = sm.add_constant(x)
     if w is None:
         model = sm.OLS(y, x)
     else:
+        ## TODO: fill nan with 0 is not a good idea, we should use the mean of the column to fill nan
+        y = np.nan_to_num(y, nan=0)
         model = sm.WLS(y, x, weights=w)
-    return model.fit()
+
+    if cov_type is None:
+        return model.fit()
+    else:
+        return model.fit(cov_type=cov_type, cov_kwds=cov_kwds or {})
 
 
 def least_square(
@@ -208,6 +234,34 @@ def least_square(
 
     result = _regression(x, y, w=w, fit_intercept=fit_intercept)
     return RegressionResult(result, fit_intercept=fit_intercept, univariate=univariate)
+
+
+@delayed
+def calculate_window(x_wind, y_wind, w_wind, m1, m2, m3, m, fit_intercept, univariate, cov_type, cov_kwds):
+    alphas: list[float] = []
+    betas: list[float | np.ndarray | None] = []
+    for j in range(m):
+        x_j = x_wind[:, :, min(j, m1 - 1)].T
+        y_j = y_wind[:, min(j, m2 - 1)]
+        w_j = None if w_wind is None else w_wind[:, min(j, m3 - 1)]
+        # if any x is all nan, skip regression
+        if np.isnan(x_j).all(axis=0).any() or np.isnan(y_j).all():
+            # alpha 一定是float；beta可能是array或者float，所以用None表示🈳
+            alpha = np.nan
+            beta = None
+        else:
+            res = RegressionResult(
+                # fit_intercept is always False, because we've padded X in __init__
+                _regression(x_j, y_j, w_j, fit_intercept=False, cov_type=cov_type, cov_kwds=cov_kwds),
+                fit_intercept=fit_intercept,
+                univariate=univariate,
+            )
+            alpha = res.alpha
+            beta = res.beta
+        alphas.append(alpha)
+        betas.append(beta)
+
+    return alphas, betas
 
 
 class RollingRegressor:
@@ -370,16 +424,36 @@ class RollingRegressor:
         if _x is not None:
             return np.swapaxes(_x, -1, -2)
 
-    def fit(self, window: int | None = None, axis=0):
+    def fit(
+        self,
+        window: int | None = None,
+        axis=0,
+        cov_type: str | None = None,
+        cov_kwds: dict | None = None,
+        n_jobs: int = 4,
+        verbose: int = 0,
+    ):
         """
         Fit the rolling regression model.
 
         Parameters
         ----------
         window: int | None, optional
-            The window size for rolling regression, default is None.
+            The window size for rolling regression, default is None. If None, window = len(data)
         axis: int, optional
             The axis along which to perform the regression, default is 0.
+        cov_type: str | None, optional
+            The covariance estimator, default is None.
+            - If None: use the default homoskedastic standard errors.
+            - If "HAC": Newey–West heteroskedasticity-and-autocorrelation robust SE.
+            - Other options supported by statsmodels (e.g. "HC0", "HC1", …).
+        cov_kwds: dict | None, optional
+            The keyword arguments for the covariance estimator, default is None.
+            For Newey–West, you’d typically pass `{"maxlags": L}` to control lag length.
+        n_jobs: int
+            num of parallel workers, passed to Parallel
+        verbose: int
+            verbosity of progress, passed to Parallel
 
         Returns
         -------
@@ -433,27 +507,27 @@ class RollingRegressor:
             alpha = np.full((n, m), np.nan)
         beta = np.full((k - fit_intercept, n, m), np.nan)
 
-        for i in range(n - window + 1):
-            x_wind = x[:, i : i + window]
-            y_wind = y[i : i + window]
-            w_wind = None if w is None else w[i : i + window]
-            for j in range(m):
-                x_j = x_wind[:, :, min(j, m1 - 1)].T
-                y_j = y_wind[:, min(j, m2 - 1)]
-                w_j = None if w_wind is None else w_wind[:, min(j, m3 - 1)]
-                # if any x is all nan, skip regression
-                if np.isnan(x_j).all(axis=0).any() or np.isnan(y_j).all():
-                    alpha[i + window - 1, j] = np.nan
-                    beta[:, i + window - 1, j] = np.nan
-                else:
-                    res = RegressionResult(
-                        # fit_intercept is always False, because we've padded X in __init__
-                        _regression(x_j, y_j, w_j, fit_intercept=False),
-                        fit_intercept=fit_intercept,
-                        univariate=univariate,
-                    )
-                    alpha[i + window - 1, j] = res.alpha
-                    beta[:, i + window - 1, j] = res.beta
+        result_gen = Parallel(n_jobs=n_jobs, verbose=verbose, return_as="generator")(
+            calculate_window(
+                x_wind=x[:, i : i + window],
+                y_wind=y[i : i + window],
+                w_wind=None if w is None else w[i : i + window],
+                m1=m1,
+                m2=m2,
+                m3=m3,
+                m=m,
+                fit_intercept=fit_intercept,
+                univariate=univariate,
+                cov_type=cov_type,
+                cov_kwds=cov_kwds,
+            )
+            for i in range(n - window + 1)
+        )
+        for i, (alphas, betas) in enumerate(result_gen):
+            alpha[i + window - 1] = alphas
+            for j, _beta in enumerate(betas):
+                if _beta is not None:
+                    beta[:, i + window - 1, j] = _beta
 
         # squeeze if table
         if is_table:
@@ -511,7 +585,7 @@ def rolling_regression(x, y, window, w=None, *, fit_intercept=True):
     return RollingRegressor(x, y, w, fit_intercept=fit_intercept).fit(window)
 
 
-def table_regression(x, y, w=None, *, fit_intercept=True, axis=0):
+def table_regression(x, y, w=None, *, fit_intercept=True, axis=1):
     """
     Perform table regression (apply regression column-wise or row-wise)
 
@@ -526,7 +600,7 @@ def table_regression(x, y, w=None, *, fit_intercept=True, axis=0):
     fit_intercept: bool, optional
         Whether to fit an intercept term, default is True.
     axis: int, optional
-        The axis along which to perform the regression, default is 0.
+        The axis along which to perform the regression, default is 1.
 
     Returns
     -------

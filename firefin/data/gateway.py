@@ -133,12 +133,15 @@ def fetch_data(
 
     valid = check_if_valid(names)
 
-    columns, index = load_AStock_info()
     for k, v in valid.items():
         if not v:
+            columns, index = load_AStock_info()
             logger.warning(f"{k} is not a valid data name, mock with random data")
             results[k] = gen_df((len(index), len(columns)))
             names.remove(k)
+
+    if len(names) == 0:
+        return results
 
     # only support file reader for now
     file_reader_names = dict()
