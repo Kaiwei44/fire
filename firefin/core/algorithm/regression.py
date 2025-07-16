@@ -502,9 +502,7 @@ class RollingRegressor:
         if is_table:
             window = n
 
-        alpha = None
-        if fit_intercept:
-            alpha = np.full((n, m), np.nan)
+        alpha = np.full((n, m), np.nan)
         beta = np.full((k - fit_intercept, n, m), np.nan)
 
         result_gen = Parallel(n_jobs=n_jobs, verbose=verbose, return_as="generator")(

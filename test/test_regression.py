@@ -12,6 +12,7 @@ import pandas as pd
 from numpy import array, nan
 
 from firefin.core.algorithm.regression import RollingRegressor, table_regression, rolling_regression
+from firefin.data.fake import gen_df
 
 
 class TestRegression(TestCase):
@@ -122,3 +123,13 @@ class TestRegression(TestCase):
         # 此时w不影响结果
         res0 = table_regression(x, y, w, axis=1)
         pd.testing.assert_frame_equal(x.mul(res0.beta, axis=0).add(res0.alpha, axis=0), y)
+
+
+    # test rolling regressor with fit_intercept=False
+    def test_rolling_regressor_no_intercept(self):
+        x = gen_df()
+        y = gen_df()
+
+        res = RollingRegressor(x, y, fit_intercept=False).fit(window=5, n_jobs=1)
+        print(res.alpha)
+        print(res.beta)
