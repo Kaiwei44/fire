@@ -1,0 +1,31 @@
+import pandas as pd
+from ...core.algorithm.regression import RollingRegressor, BatchRegressionResult
+
+def cross_sectional_regression(
+        factor: pd.DataFrame | pd.Series, return_adj: pd.DataFrame, window: int = 252, n_jobs=4, verbose: int = 0
+) -> BatchRegressionResult:
+    """
+    Run cross sectional  regression.
+
+    return:
+    risk premium : result.beta
+    anomaly : result.alpha
+    anomaly t statistics : result.alpha_t
+    """
+    # Note: Calculate excess returns if necessary
+    # return_adj = return_adj - risk_free_rate
+    # excess return is different in many cases, we leave it to the user to handle this.
+
+    # First step: Time-series regressions
+    r = RollingRegressor(factor, return_adj, None, fit_intercept=True).fit(window, n_jobs=n_jobs, verbose=verbose)
+    mean_return = []
+    T= return_adj.shape[0]
+    for t in range(T-window):
+        mean_ret = return_adj.iloc[t:t+window,:].mean(axis=0)
+        mean_return.append(mean_ret)
+
+    # Second step: Cross sectional regressions
+    mean_return_df = pd.DataFrame(mean_return, index= return_adj.index[-len(mean_return):]).reindex(return_adj.index)
+    m=RollingRegressor(r.beta, mean_return_df, None, fit_intercept=True).fit(window=None, axis=1, n_jobs=n_jobs, verbose=verbose)
+
+    return BatchRegressionResult(beta=m.beta, alpha=m.alpha, alpha_t=m.alpha_t)
