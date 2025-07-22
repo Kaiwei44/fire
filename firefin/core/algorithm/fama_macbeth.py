@@ -1,7 +1,7 @@
 import pandas as pd
 
-from ...core.algorithm.newey_west_ttest_1samp import NeweyWestTTest
-from ...core.algorithm.regression import RollingRegressor, BatchRegressionResult
+from .newey_west_ttest_1samp import NeweyWestTTest
+from .regression import RollingRegressor, BatchRegressionResult
 
 
 class FamaMacBeth:
