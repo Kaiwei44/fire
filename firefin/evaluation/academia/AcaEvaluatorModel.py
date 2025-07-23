@@ -44,7 +44,7 @@ class AcaEvaluatorModel:
                 RegressionResult
         """
 
-        results = FamaMacBeth.run_regression(self.factor, self.return_adj, window=window, n_jobs=self.n_jobs, verbose=self.verbose)
+        results = FamaMacBeth.run_regression(self.factor_portfolio, self.return_adj, window=window, n_jobs=self.n_jobs, verbose=self.verbose)
         if return_stats:
             stats = FamaMacBeth.test_statistics(results)
             return results, stats
@@ -71,7 +71,7 @@ class AcaEvaluatorModel:
         if rolling:
             # Use rolling_regression function
             result = RollingRegressor(
-                x = self.factor, 
+                x = self.factor_portfolio, 
                 y = self.return_adj,  
                 fit_intercept = fit_intercept
                 ).fit(
