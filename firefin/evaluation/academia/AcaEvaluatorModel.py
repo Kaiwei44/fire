@@ -1,19 +1,23 @@
 import typing
 import pandas as pd
 import numpy as np
+import math
 from ...core.eva_utils import QuantileReturns
 from ...core.algorithm.regression import least_square, RollingRegressor, BatchRegressionResult
 from ...common.config import logger
 from ...core.algorithm.cross_sectional_regression import cross_sectional_regression
 from ...core.algorithm.fama_macbeth import FamaMacBeth
+from ...core.algorithm.NeweyWestTest import NeweyWestTest
+
 
 class AcaEvaluatorModel:
-    def __init__(self, factor_portfolio: list[pd.Series], 
-                        return_adj: pd.DataFrame, 
-                        n_jobs: int = 10,
-                        time_series_window: int = 60,
-                        all_time_series_regression: bool = True,
-                        verbose: int = 0):
+    def __init__(self, factor_portfolio: list[pd.Series],
+                 return_adj: pd.DataFrame,
+                 n_jobs: int = 10,
+                 time_series_window: int = 60,
+                 all_time_series_regression: bool = True,
+                 cov_type = None,
+                 verbose: int = 0):
         """
         Parameters:
             factor_portfolio: list[pd.Series]
@@ -34,6 +38,7 @@ class AcaEvaluatorModel:
         self.return_adj = return_adj
         self.n_jobs = n_jobs
         self.verbose = verbose
+        self.cov_type = cov_type
 
         # define time series window or all time series regression
         if all_time_series_regression:
@@ -58,11 +63,20 @@ class AcaEvaluatorModel:
         x = []
         for portfolio in self.factor_portfolio:
             # expand portfolio to a pd.DataFrame like return_adj, copy series to each column
-            x.append(pd.DataFrame(np.tile(portfolio.values[:,np.newaxis], (1, self.return_adj.shape[1])),index=self.return_adj.index, columns=self.return_adj.columns))
+            x.append(pd.DataFrame(np.tile(portfolio.values[:, np.newaxis], (1, self.return_adj.shape[1])),
+                                  index=self.return_adj.index, columns=self.return_adj.columns))
 
         # perform multiple time-series regressions
-        self.time_series_res = RollingRegressor(x, self.return_adj, fit_intercept=fit_intercept).fit(window=self.time_series_window, n_jobs=self.n_jobs)
+        if self.cov_type is None :
+            self.time_series_res = RollingRegressor(x, self.return_adj, fit_intercept=fit_intercept).fit(
+                window=self.time_series_window, n_jobs=self.n_jobs)
+        elif self.cov_type == 'HAC' or self.cov_type == "hac":
+            N = self.return_adj.shape[1]
+            optimal_lags = math.floor(4 * (N / 100) ** (2 / 9))  # maxlags refers to Newey, West(1994)
+            self.time_series_res = RollingRegressor(x, self.return_adj, fit_intercept=fit_intercept).fit(
+                window=self.time_series_window, n_jobs=self.n_jobs, cov_type=self.cov_type,cov_kwds={'maxlags': optimal_lags})
 
+        return self.time_series_res
 
     def run_cross_sectional_regression(self):
         """
@@ -75,12 +89,13 @@ class AcaEvaluatorModel:
         # if already done time series regression, use the result
         if self.time_series_res is None:
             self.run_time_series_regression()
-        
-        return cross_sectional_regression(self.time_series_res, self.return_adj, window=self.time_series_window, skip_time_series_regression=True, n_jobs=self.n_jobs, verbose=self.verbose)
+
+        return cross_sectional_regression(self.time_series_res, self.return_adj, window=self.time_series_window,
+                                          skip_time_series_regression=True, n_jobs=self.n_jobs, verbose=self.verbose, cov_type=self.cov_type)
 
     def run_fama_macbeth_regression(self):
         """
-        
+
         Fama-MacBeth regression
 
         Parameters:
@@ -95,4 +110,5 @@ class AcaEvaluatorModel:
         if self.time_series_res is None:
             self.run_time_series_regression()
 
-        return FamaMacBeth.run_regression(self.time_series_res, self.return_adj, window=self.time_series_window, skip_time_series_regression=True, n_jobs=self.n_jobs, verbose=self.verbose)
+        return FamaMacBeth.run_regression(self.time_series_res, self.return_adj, window=self.time_series_window,
+                                          skip_time_series_regression=True, n_jobs=self.n_jobs, verbose=self.verbose)
