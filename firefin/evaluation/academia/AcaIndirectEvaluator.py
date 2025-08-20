@@ -458,16 +458,17 @@ class AcaIndirectEvaluator(AcaEvaluatorModel):
         out = pd.DataFrame(rows, index=names)
         return out
 
-    def export_evaluation_table(self, mode: str = "daily", customized_factor: list[pd.Series] | None = None) :
-      """
-            Generate a LaTeX-formatted evaluation table summarizing portfolio performance 
+        def export_evaluation_table(self, mode: str = "daily", customized_factor: list[pd.Series] | None = None) :
+
+        """
+            Generate a LaTeX-formatted evaluation table summarizing portfolio performance
             and factor regression results.
 
-            This method computes excess returns for each factor portfolio, summarizes 
-            return statistics, and evaluates factor loadings under multiple models 
-            (CAPM, Fama–French 3-factor with momentum, and optionally a user-defined 
-            factor set). It outputs a combined LaTeX table containing coefficients, 
-            t-values, and adjusted R² values for each model, along with portfolio 
+            This method computes excess returns for each factor portfolio, summarizes
+            return statistics, and evaluates factor loadings under multiple models
+            (CAPM, Fama–French 3-factor with momentum, and optionally a user-defined
+            factor set). It outputs a combined LaTeX table containing coefficients,
+            t-values, and adjusted R² values for each model, along with portfolio
             return statistics.
 
             Parameters
@@ -475,8 +476,8 @@ class AcaIndirectEvaluator(AcaEvaluatorModel):
             mode : {"daily", "monthly", ...}, default "daily"
                 Frequency mode for summarizing returns. Passed to `summarize_returns`.
             customized_factor : list of pd.Series, optional
-                User-specified factor return series for an additional custom factor 
-                regression. Only used when provided. Each series should have a datetime 
+                User-specified factor return series for an additional custom factor
+                regression. Only used when provided. Each series should have a datetime
                 index aligned with portfolio returns.
 
             Returns
@@ -488,7 +489,8 @@ class AcaIndirectEvaluator(AcaEvaluatorModel):
                 - Fama–French 3-factor with momentum regression results
                 - Optional custom factor regression results (if provided)
 
-      """
+            """
+
         names = [s.name for s in self.factor_portfolio]
         excess_ret = [s - self.risk_free_rate for s in self.factor_portfolio]
         summarize_returns = self.summarize_returns(excess_ret, mode=mode)
@@ -496,19 +498,13 @@ class AcaIndirectEvaluator(AcaEvaluatorModel):
 
         mkt_df, mkt_stats_df, mkt_r2_adj  = self.evaluate_by_other_factors(mode="capm")
         ff4_df, ff4_stats_df, ff4_r2_adj = self.evaluate_by_other_factors(mode="ff3_mom")
-        a, b = mkt_stats_df.align(mkt_df, join="outer")
-        out_multi = pd.concat({"coeff": a, "tvalue": b}, axis=1)
-        mkt = out_multi.swaplevel(0, 1, axis=1).sort_index(axis=1)
+        mkt = stitch_coeff_tvalue(mkt_df, mkt_stats_df)
 
-        a, b = ff4_stats_df.align(ff4_df, join="outer")
-        out_multi = pd.concat({"coeff": a, "tvalue": b}, axis=1)
-        ff4 = out_multi.swaplevel(0, 1, axis=1).sort_index(axis=1)
+        ff4 = stitch_coeff_tvalue(ff4_df, ff4_stats_df)
 
         if customized_factor is not None:
             customized_factor_df, customized_factor_stats_df, customized_factor_r2_adj = self.evaluate_by_other_factors(mode="customize", factor2=customized_factor)
-            a, b = customized_factor_stats_df.align(customized_factor_df, join="outer")
-            out_multi = pd.concat({"coeff": a, "tvalue": b}, axis=1)
-            customized_factor = out_multi.swaplevel(0, 1, axis=1).sort_index(axis=1)
+            customized_factor = stitch_coeff_tvalue(customized_factor_df, customized_factor_stats_df)
         else:
             customized_factor = None
             customized_factor_r2_adj = None
@@ -517,3 +513,17 @@ class AcaIndirectEvaluator(AcaEvaluatorModel):
                            df2=ff4,df2_r2=ff4_r2_adj,
                            customize_factor=customized_factor,customize_r2=customized_factor_r2_adj,
                            excess_df=summarize_returns)
+
+
+def stitch_coeff_tvalue(df_coeff: pd.DataFrame, df_tval: pd.DataFrame) -> pd.DataFrame:
+    if not df_coeff.index.equals(df_tval.index):
+        raise ValueError("Index mismatch between coeff and tvalue DataFrames")
+    if not df_coeff.columns.equals(df_tval.columns):
+        raise ValueError("Column mismatch between coeff and tvalue DataFrames")
+
+    out = pd.concat({'coeff': df_coeff, 'tvalue': df_tval}, axis=1) \
+            .swaplevel(0, 1, axis=1)
+
+    cols = df_coeff.columns
+    out = out.reindex(columns=pd.MultiIndex.from_product([cols, ['coeff', 'tvalue']]))
+    return out
