@@ -48,7 +48,7 @@ class AcaEvaluatorModel:
             if factor.shape[0] != return_adj.shape[0]:
                 raise ValueError("The number of rows in factor_portfolio and return_adj must be the same")
 
-    def run_time_series_regression(self, fit_intercept: bool = True)
+    def run_time_series_regression(self, fit_intercept: bool = True):
         """
         Parameters:
             window: int
