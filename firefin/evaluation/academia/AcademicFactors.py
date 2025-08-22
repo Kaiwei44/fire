@@ -1,8 +1,7 @@
 from __future__ import annotations
-import numpy as np
 import pandas as pd
 from typing import Tuple, List
-from ...evaluation.academia.portfolio_sort import PortfolioSort
+from ...core.algorithm.portfolio_sort import PortfolioSort
 
 
 class AcademicFactors:
@@ -32,8 +31,6 @@ class AcademicFactors:
             value_weighted: bool = True,
             dependent: bool = True, 
     ) -> pd.Series:
-        
-        from ...evaluation.academia.portfolio_sort import PortfolioSort
 
         if value_weighted:
             assert market_cap is not None, "market_cap is required for value-weighted returns"

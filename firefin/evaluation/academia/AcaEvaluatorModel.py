@@ -1,14 +1,11 @@
-import typing
 import pandas as pd
 import numpy as np
 import math
-from ...core.eva_utils import QuantileReturns
-from ...core.algorithm.regression import least_square, RollingRegressor, BatchRegressionResult
-from ...common.config import logger
+
+from ...core.algorithm.regression import BatchRegressionResult
+from ...core.algorithm.regression import RollingRegressor
 from ...core.algorithm.cross_sectional_regression import cross_sectional_regression
 from ...core.algorithm.fama_macbeth import FamaMacBeth
-from ...core.algorithm.NeweyWestTest import NeweyWestTest
-
 
 class AcaEvaluatorModel:
     def __init__(self, factor_portfolio: list[pd.Series],
@@ -51,7 +48,7 @@ class AcaEvaluatorModel:
             if factor.shape[0] != return_adj.shape[0]:
                 raise ValueError("The number of rows in factor_portfolio and return_adj must be the same")
 
-    def run_time_series_regression(self, fit_intercept: bool = True):
+    def run_time_series_regression(self, fit_intercept: bool = True)
         """
         Parameters:
             window: int
@@ -78,7 +75,7 @@ class AcaEvaluatorModel:
 
         return self.time_series_res
 
-    def run_cross_sectional_regression(self):
+    def run_cross_sectional_regression(self) -> BatchRegressionResult:
         """
         Parameters:
             None
@@ -93,7 +90,7 @@ class AcaEvaluatorModel:
         return cross_sectional_regression(self.time_series_res, self.return_adj, window=self.time_series_window,
                                           skip_time_series_regression=True, n_jobs=self.n_jobs, verbose=self.verbose, cov_type=self.cov_type)
 
-    def run_fama_macbeth_regression(self):
+    def run_fama_macbeth_regression(self) -> BatchRegressionResult:
         """
 
         Fama-MacBeth regression
