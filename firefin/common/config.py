@@ -6,7 +6,7 @@ import yaml
 import json
 from loguru import logger
 
-# Load configuration from YAML file
+# Load configuration from YAML file, windows with default Decode
 with open(os.path.join(os.path.dirname(__file__), "config.yaml"), "r", encoding="utf-8") as stream:
     config = yaml.safe_load(stream)
 
